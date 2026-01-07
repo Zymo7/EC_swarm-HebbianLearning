@@ -23,6 +23,23 @@ def calc_vel_targets(controller, states):
     return [n_l, n_r]
 
 
+def update_target_position(current_time, center_x, center_y, radius, angular_velocity):
+    """
+    Update the target position for circular motion.
+    
+    :param current_time: Current simulation time
+    :param center_x: X coordinate of the circle center
+    :param center_y: Y coordinate of the circle center
+    :param radius: Radius of the circular motion
+    :param angular_velocity: Angular velocity in rad/s
+    :return: Target position as np.array([x, y])
+    """
+    angle = angular_velocity * current_time
+    target_x = center_x + radius * np.cos(angle)
+    target_y = center_y + radius * np.sin(angle)
+    return np.array([target_x, target_y])
+
+
 class __EnvSet(TypedDict):
     """
     Environment settings specifying the following parameters:
@@ -53,7 +70,10 @@ EnvSettings: __EnvSet = {
     'env_perturb': False,
     'save_sim_state': False,
     'save_full_fitness': False,
-    'random_start': True
+    'random_start': True,
+    'dynamic_target': False,
+    'target_radius': 10.0,
+    'target_angular_velocity': 0.1
 }
 
 
@@ -333,22 +353,39 @@ def simulate_swarm_population(life_timeout: float, individuals: List[List[Indivi
     start = gym.get_sim_time(sim)
     frame = 0
     fitness_current = np.zeros((fitness_list[0].get_fitness_size(), len(individuals)))
+    
+    # Dynamic target parameters
+    dynamic_target = env_params.get('dynamic_target', False)
+    if dynamic_target:
+        arena_size = int(re.findall('\d+', arena)[-1])
+        center_x = arena_size / 2
+        center_y = arena_size / 2
+        target_radius = env_params.get('target_radius', arena_size / 3)
+        target_angular_velocity = env_params.get('target_angular_velocity', 0.1)
+    
     print(f"Starting simulation at: {time.asctime()}")
     while t <= life_timeout:
         t = gym.get_sim_time(sim)
         if (t - start) > 0.0995:
             timestep += 1  # Time step counter
+            
+            # Update target position if dynamic target is enabled
+            if dynamic_target:
+                target_position = update_target_position(t, center_x, center_y, target_radius, target_angular_velocity)
+            else:
+                target_position = None
+            
             for i_env in range(num_envs):
                 env = env_list[i_env]
                 robot_handles = robot_handles_list[i_env]
                 controller = controller_list[i_env]
                 # Update positions and headings of all robots
                 headings, positions[0], positions[1] = get_pos_and_headings(env, robot_handles)
-                sensor_list[i_env].calculate_states(positions, headings)
+                sensor_list[i_env].calculate_states(positions, headings, target_position)
                 states = sensor_list[i_env].get_current_state()
                 update_robot(env, controller, robot_handles, states)
 
-                fitness_current[:, i_env] = fitness_list[i_env].obtain_fitnesses(positions, headings) / timestep
+                fitness_current[:, i_env] = fitness_list[i_env].obtain_fitnesses(positions, headings, target_position) / timestep
                 if save_full_fitness:
                     fitness_full.append(copy.deepcopy(fitness_current))
                     if not t < life_timeout:

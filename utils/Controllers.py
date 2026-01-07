@@ -98,7 +98,11 @@ class NNController(Controller):
         assert (len(state) == self.n_input), "State does not correspond with expected input size"
         state[:4] = self.map_state(0, 2, -1, 1, state[:4])
         state[4:8] = self.map_state(-np.pi, np.pi, -1, 1, state[4:8])  # Assumed distance sensing range is 2.0 meters. If not, check!
-        state[-1] = self.map_state(0, 255.0, -1, 1, state[-1])  # Gradient value, [0, 255]
+        state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
+        # Normalize target position if present (state dimensions 9 and 10)
+        if len(state) > 9:
+            arena_size = 30  # Default arena size, can be made configurable
+            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
 
         action = self.model.forward(state)
         control_input = action * np.array([self.umax_const, self.wmax])
@@ -136,7 +140,11 @@ class widthNNController(Controller):
         assert (len(state) == self.n_input), "State does not correspond with expected input size"
         state[:4] = self.map_state(0, 2, -1, 1, state[:4])
         state[4:8] = self.map_state(-np.pi, np.pi, -1, 1, state[4:8])  # Assumed distance sensing range is 2.0 meters. If not, check!
-        state[-1] = self.map_state(0, 255.0, -1, 1, state[-1])  # Gradient value, [0, 255]
+        state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
+        # Normalize target position if present (state dimensions 9 and 10)
+        if len(state) > 9:
+            arena_size = 30  # Default arena size, can be made configurable
+            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
 
         action = self.model.forward(state)
         control_input = action * np.array([self.umax_const, self.wmax])
@@ -216,7 +224,11 @@ class recurrentNNController(Controller):
         assert (len(state) == self.n_input), "State does not correspond with expected input size"
         state[:4] = self.map_state(0, 2, -1, 1, state[:4])
         state[4:8] = self.map_state(-np.pi, np.pi, -1, 1, state[4:8])  # Assumed distance sensing range is 2.0 meters. If not, check!
-        state[-1] = self.map_state(0, 255.0, -1, 1, state[-1])  # Gradient value, [0, 255]
+        state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
+        # Normalize target position if present (state dimensions 9 and 10)
+        if len(state) > 9:
+            arena_size = 30  # Default arena size, can be made configurable
+            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
 
         rnn_input = np.hstack((state, self.prev_output))
 
@@ -328,7 +340,11 @@ class GNNController(Controller):
                                     state[4:8])  # Assumed distance sensing range is 2.0 meters. If not, check!
         # state[4] = self.map_state(-3.1416, 3.1416, -1, 1, state[4]) # Heading average, already converted
         # state[5] = self.map_state(-3.1416, 3.1416, -1, 1, state[5])  # Own heading, [-pi, pi]
-        state[-1] = self.map_state(0, 255.0, -1, 1, state[-1])  # Gradient value, [0, 255]
+        state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
+        # Normalize target position if present (state dimensions 9 and 10)
+        if len(state) > 9:
+            arena_size = 30  # Default arena size, can be made configurable
+            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
 
         node_states = self.gcn.forward(state)
         state = np.concatenate((node_states, state))
@@ -387,7 +403,11 @@ class hebbianNNController(Controller):
         state[:4] = self.map_state(0, 2, -1, 1, state[:4])
         state[4:8] = self.map_state(-np.pi, np.pi, -1, 1,
                                     state[4:8])  # Assumed distance sensing range is 2.0 meters. If not, check!
-        state[-1] = self.map_state(0, 255.0, -1, 1, state[-1])  # Gradient value, [0, 255]
+        state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
+        # Normalize target position if present (state dimensions 9 and 10)
+        if len(state) > 9:
+            arena_size = 30  # Default arena size, can be made configurable
+            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
 
         # if len(self.l1_log) > 3000:
         #     state[-1] = -1 + (len(self.l1_log)-3000)/1500

@@ -54,7 +54,7 @@ class FitnessCalculator:
 
         self.dij = np.zeros((self.num_robots, self.num_robots))
 
-    def obtain_fitnesses(self, positions, headings):
+    def obtain_fitnesses(self, positions, headings, target_position=None):
         xx1, xx2 = np.meshgrid(positions[0], positions[0])
         yy1, yy2 = np.meshgrid(positions[1], positions[1])
         d_ij_x = xx1 - xx2
@@ -80,12 +80,16 @@ class FitnessCalculator:
                     fitnesses.append(self.calculate_subgroup_alignment(headings))
                 if objective == 'gradient_sub':
                     fitnesses.append(self.calculate_subgroup_grad(positions))
+                if objective == 'target_tracking':
+                    if target_position is None:
+                        raise ValueError("target_position must be provided for 'target_tracking' objective")
+                    fitnesses.append(self.calculate_target_tracking(positions, target_position))
             return np.hstack(fitnesses)
 
     def get_fitness_size(self):
         length = 0
         for objective in self.objectives:
-            if objective == 'gradient' or objective == 'alignment' or objective == 'movement' or objective == 'n_groups':
+            if objective == 'gradient' or objective == 'alignment' or objective == 'movement' or objective == 'n_groups' or objective == 'target_tracking':
                 length += 1
             if objective == 'cohesion_and_separation' or objective == 'coh_sep':
                 length += 2
@@ -263,6 +267,29 @@ class FitnessCalculator:
         total_movement = total_movement / self.num_robots
 
         return np.array([total_movement])
+
+    def calculate_target_tracking(self, positions, target_position):
+        """
+        Calculate fitness for target tracking objective.
+        Fitness is based on the average distance of all robots to the target position.
+        
+        :param positions: (x, y) positions of all robots
+        :param target_position: (x, y) position of the target
+        :return: target tracking fitness value [0, 1]
+        """
+        distances_to_target = np.zeros(self.num_robots)
+        
+        for i in range(self.num_robots):
+            distance = np.sqrt(np.square(positions[0][i] - target_position[0]) + 
+                             np.square(positions[1][i] - target_position[1]))
+            distances_to_target[i] = distance
+        
+        mean_distance = np.mean(distances_to_target)
+        # Fitness = 1 / (1 + mean_distance)
+        # This encourages agents to get closer to the target
+        fitness = 1.0 / (1.0 + mean_distance)
+        
+        return np.array([fitness])
 
     def calculate_number_of_groups(self, positions) -> int:
         """

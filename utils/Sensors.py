@@ -36,7 +36,7 @@ class Sensors:
     def get_current_state(self):
         return self.states
 
-    def calculate_states(self, positions, headings):
+    def calculate_states(self, positions, headings, target_position=None):
         headings = headings[np.newaxis].T
         for i_sensor, sensor in enumerate(self.sensor_list):
             state = None
@@ -66,6 +66,10 @@ class Sensors:
                 grad_sensor_outputs = self.grad_sensor(positions)
                 state = np.hstack((distance_sensor_outputs, heading_sensor_outputs,
                                    grad_sensor_outputs))
+                # Add target position sensor if target_position is provided
+                if target_position is not None:
+                    target_sensor_outputs = self.target_position_sensor(positions, target_position)
+                    state = np.hstack((state, target_sensor_outputs))
             if sensor == "default":
                 distance_sensor_outputs = self.distance_sensor_4dir(positions, headings)
                 heading_sensor_outputs = self.heading_sensor_ae(positions, headings)
@@ -467,3 +471,19 @@ class Sensors:
             x = x - (3.1415926 * 2)
 
         return x
+
+    def target_position_sensor(self, positions: np.ndarray, target_position: np.ndarray) -> np.ndarray:
+        """
+        Calculate the relative position of the target from each agent's perspective.
+        
+        :param positions: (x, y) positions of all robots
+        :param target_position: (x, y) position of the target
+        
+        :return: relative target positions for all robots (shape: [num_robots, 2])
+        """
+        num_robots = positions.shape[1]
+        relative_positions = np.zeros((num_robots, 2))
+        for i in range(num_robots):
+            relative_positions[i, 0] = target_position[0] - positions[0, i]
+            relative_positions[i, 1] = target_position[1] - positions[1, i]
+        return relative_positions
