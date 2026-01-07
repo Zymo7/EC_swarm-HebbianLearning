@@ -26,6 +26,63 @@ To run the same evolutionary experiments as presented in the paper run the follo
 
 [//]: # (```)
 
+---
+
+## Dynamic Target Tracking
+
+This repository now includes support for **dynamic target tracking**, extending the original static gradient-based navigation to handle moving targets.
+
+### Features
+
+The dynamic target tracking implementation includes:
+
+- **Circular Motion Target**: Target moves in uniform circular motion with configurable radius and angular velocity
+- **Extended Observation Space**: State vector expanded from 9D to 11D
+  - Original: 4 distances + 4 headings + 1 gradient = 9D
+  - New: 4 distances + 4 headings + 1 gradient + 2 target position (relative) = 11D
+- **New Fitness Function**: `target_tracking` objective that encourages agents to approach and follow the moving target
+- **Backward Compatible**: All existing experiments work unchanged when `dynamic_target=False`
+
+### Running Dynamic Target Tracking Experiments
+
+To run dynamic target tracking experiments:
+
+```bash
+python experiments/Dynamic_Target_Tracking.py
+```
+
+This experiment uses:
+- 11-dimensional input (includes relative target position)
+- Circular target motion (radius = arena_size/3, angular_velocity = 0.1 rad/s)
+- Target tracking fitness function
+
+### Configuration
+
+Dynamic target settings in `EnvSettings`:
+
+```python
+simulator_settings = {
+    'dynamic_target': True,              # Enable dynamic target
+    'target_radius': 10.0,               # Radius of circular motion
+    'target_angular_velocity': 0.1,      # Angular velocity (rad/s)
+    'objectives': ['target_tracking'],   # Use target tracking fitness
+    # ... other settings
+}
+```
+
+### Testing
+
+Run validation tests to verify the implementation:
+
+```bash
+# Structure validation (no dependencies required)
+python experiments/TEST/validate_structure.py
+
+# Full functional tests (requires dependencies)
+python experiments/TEST/test_dynamic_target.py
+```
+
+---
 
 ### Citation:
 ```
