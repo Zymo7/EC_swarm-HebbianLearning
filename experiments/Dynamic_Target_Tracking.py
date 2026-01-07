@@ -19,7 +19,9 @@ from utils.Fitnesses import Calculate_fitness_size
 
 
 def main():
-    n_input = 11  # Changed from 9 to 11 to accommodate target position (2D)
+    # Changed from 9 to 11 to accommodate target position (2D)
+    # State vector: 4 distances + 4 headings + 1 gradient + 2 target_position = 11D
+    n_input = 11
     n_output = 2
     genotype = thymio_genotype("hNN", n_input, n_output)
     genotype['controller']["params"]['torch'] = False

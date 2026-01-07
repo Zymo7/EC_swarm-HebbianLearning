@@ -82,7 +82,10 @@ class FitnessCalculator:
                     fitnesses.append(self.calculate_subgroup_grad(positions))
                 if objective == 'target_tracking':
                     if target_position is None:
-                        raise ValueError("target_position must be provided for 'target_tracking' objective")
+                        raise ValueError(
+                            "target_position parameter must be provided when using 'target_tracking' objective. "
+                            "Set env_params['dynamic_target']=True and ensure target position is calculated and passed."
+                        )
                     fitnesses.append(self.calculate_target_tracking(positions, target_position))
             return np.hstack(fitnesses)
 

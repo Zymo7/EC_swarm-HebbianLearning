@@ -30,7 +30,14 @@ def check_function_exists(filepath, function_name):
     return False
 
 def check_dict_key_exists(filepath, dict_name, key_name):
-    """Check if a key exists in a dictionary definition"""
+    """
+    Check if a key exists in a dictionary definition.
+    
+    Note: This uses simple string search which may have limitations:
+    - May give false positives if the key appears in comments or strings
+    - May miss keys if formatting differs significantly
+    - Sufficient for validation but not for production parsing
+    """
     with open(filepath, 'r') as f:
         content = f.read()
         # Simple string search (not perfect but works for our case)

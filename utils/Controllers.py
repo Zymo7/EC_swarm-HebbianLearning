@@ -19,6 +19,10 @@ from utils.graph_network.GCN_layer import GCNLayerNumpy
 torch.set_grad_enabled(False)
 rng = numpy.random.default_rng()
 
+# Default arena size for state normalization
+# This can be overridden in future by passing arena_size to controllers
+DEFAULT_ARENA_SIZE = 30
+
 class Controller(object):
     def __init__(self, n_states, n_actions, gcn_output_dim=0):
         self.n_input = n_states
@@ -101,8 +105,8 @@ class NNController(Controller):
         state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
         # Normalize target position if present (state dimensions 9 and 10)
         if len(state) > 9:
-            arena_size = 30  # Default arena size, can be made configurable
-            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
+            # Use DEFAULT_ARENA_SIZE constant defined at module level
+            state[9:11] = self.map_state(-DEFAULT_ARENA_SIZE, DEFAULT_ARENA_SIZE, -1, 1, state[9:11])
 
         action = self.model.forward(state)
         control_input = action * np.array([self.umax_const, self.wmax])
@@ -143,8 +147,8 @@ class widthNNController(Controller):
         state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
         # Normalize target position if present (state dimensions 9 and 10)
         if len(state) > 9:
-            arena_size = 30  # Default arena size, can be made configurable
-            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
+            # Use DEFAULT_ARENA_SIZE constant defined at module level
+            state[9:11] = self.map_state(-DEFAULT_ARENA_SIZE, DEFAULT_ARENA_SIZE, -1, 1, state[9:11])
 
         action = self.model.forward(state)
         control_input = action * np.array([self.umax_const, self.wmax])
@@ -227,8 +231,8 @@ class recurrentNNController(Controller):
         state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
         # Normalize target position if present (state dimensions 9 and 10)
         if len(state) > 9:
-            arena_size = 30  # Default arena size, can be made configurable
-            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
+            # Use DEFAULT_ARENA_SIZE constant defined at module level
+            state[9:11] = self.map_state(-DEFAULT_ARENA_SIZE, DEFAULT_ARENA_SIZE, -1, 1, state[9:11])
 
         rnn_input = np.hstack((state, self.prev_output))
 
@@ -343,8 +347,8 @@ class GNNController(Controller):
         state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
         # Normalize target position if present (state dimensions 9 and 10)
         if len(state) > 9:
-            arena_size = 30  # Default arena size, can be made configurable
-            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
+            # Use DEFAULT_ARENA_SIZE constant defined at module level
+            state[9:11] = self.map_state(-DEFAULT_ARENA_SIZE, DEFAULT_ARENA_SIZE, -1, 1, state[9:11])
 
         node_states = self.gcn.forward(state)
         state = np.concatenate((node_states, state))
@@ -406,8 +410,8 @@ class hebbianNNController(Controller):
         state[8] = self.map_state(0, 255.0, -1, 1, state[8])  # Gradient value, [0, 255]
         # Normalize target position if present (state dimensions 9 and 10)
         if len(state) > 9:
-            arena_size = 30  # Default arena size, can be made configurable
-            state[9:11] = self.map_state(-arena_size, arena_size, -1, 1, state[9:11])
+            # Use DEFAULT_ARENA_SIZE constant defined at module level
+            state[9:11] = self.map_state(-DEFAULT_ARENA_SIZE, DEFAULT_ARENA_SIZE, -1, 1, state[9:11])
 
         # if len(self.l1_log) > 3000:
         #     state[-1] = -1 + (len(self.l1_log)-3000)/1500
